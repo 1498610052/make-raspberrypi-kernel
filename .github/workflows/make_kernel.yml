@@ -25,9 +25,11 @@ jobs:
           cp .config ../linux
       - name: Make
         run: |
-          cd ../linux
-          export PATH=$PATH:$HOME/work/linux/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin
-          export PATH=$PATH:$HOME/work/linux/tools/arm-bcm2708/arm-bcm2708-linux-gnueabi/bin
+          cd ../
+          export WORKPATH=$(pwd)
+          export PATH=$PATH:$WORKPATH/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin
+          export PATH=$PATH:$WORKPATH/tools/arm-bcm2708/arm-bcm2708-linux-gnueabi/bin
+          cd linux/
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage modules dtbs -j8
       - name: Create Release
         id: create_release

@@ -1,0 +1,56 @@
+name: Make RaspberryPi Kernel
+
+on:
+  push:
+    tags: 
+      - 'v*'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: pull RaspberryPi Kernel linux
+        run: |
+          cd ../
+          git clone https://github.com/raspberrypi/linux.git
+      - name: pull RaspberryPi Kernel Tool
+        run: |
+          cd ../
+          git clone https://github.com/raspberrypi/tools.git
+      - name: Move .config
+        run: |
+          cp .config ../linux
+      - name: Make
+        run: |
+          cd ../linux
+          export PATH=$PATH:$HOME/work/linux/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin
+          export PATH=$PATH:$HOME/work/linux/tools/arm-bcm2708/arm-bcm2708-linux-gnueabi/bin
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage modules dtbs -j8
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }} # 之前GitHub添加的Token
+        with:
+          tag_name: ${{ github.ref }} # (tag)标签名称
+          release_name: Release ${{ github.ref }}
+          draft: false # 是否是草稿
+          prerelease: false # 是否是预发布
+      # 上传构建结果到 Release（把打包的tgz上传到Release）
+      - name: build TAR PACKAGE
+        run: |
+          tar -czvf raspberrypi-kernel.tar.gz ../linux/arch/arm/boot
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./raspberrypi-kernel.tar.gz # 要上传文件
+          asset_name: raspberrypi-kernel.tar.gz # 上传后的文件名
+          asset_content_type: application/gzip
+

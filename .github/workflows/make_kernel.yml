@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  USE_SSH_CONFIG: true
+  USE_SSH_CONFIG: true # 是否使用ssh连接进行 true:使用 false:不使用
 
 jobs:
   build:

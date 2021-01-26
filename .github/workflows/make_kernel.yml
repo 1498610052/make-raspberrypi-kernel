@@ -5,6 +5,9 @@ on:
     tags: 
       - 'v*'
 
+env:
+  USE_SSH_CONFIG: true
+
 jobs:
   build:
 
@@ -21,8 +24,12 @@ jobs:
           cd ../
           git clone https://github.com/raspberrypi/tools.git
       - name: Move .config
+        if: env.USE_SSH_CONFIG == 'false'
         run: |
           cp .config ../linux
+      - name: Setup Debug Session # 用SSH连接Actions
+        if: env.USE_SSH_CONFIG == 'true'
+        uses: csexton/debugger-action@master
       - name: Make
         run: |
           cd ../

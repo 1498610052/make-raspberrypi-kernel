@@ -1,4 +1,4 @@
-name: Make RaspberryPi Kernel
+name: My Kernel
 
 on:
   push:
@@ -15,14 +15,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: pull RaspberryPi Kernel linux
+      - name: pull my Kernel linux
         run: |
           cd ../
-          git clone https://github.com/raspberrypi/linux.git
+          git clone https://github.com/1498610052/kernel_xiaomi_msm8998-1
       - name: pull RaspberryPi Kernel Tool
         run: |
           cd ../
-          git clone https://github.com/raspberrypi/tools.git
+          git clone https://github.com/1498610052/clang
+          git clone https://github.com/1498610052/gcc
       - name: Move .config
         if: env.USE_SSH_CONFIG == 'false'
         run: |
@@ -32,12 +33,15 @@ jobs:
         uses: csexton/debugger-action@master
       - name: Make
         run: |
-          cd ../
-          export WORKPATH=$(pwd)
-          export PATH=$PATH:$WORKPATH/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin
-          export PATH=$PATH:$WORKPATH/tools/arm-bcm2708/arm-bcm2708-linux-gnueabi/bin
-          cd linux/
-          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage modules dtbs -j8
+          cd kernel_xiaomi_msm8998-1/
+make O=out ARCH=arm64 sagit_defconfig
+make -j$(nproc --all) O=out \
+                     ARCH=arm64 \
+                     CC="ccache $HOME/clang/bin/clang" "$@" \
+                     CROSS_COMPILE=/root/gcc/bin/aarch64-linux-gnu- \
+                     CROSS_COMPILE_ARM32=$HOME/clang/bin/arm-linux-gnueabi- \
+                     STRIP=/root/clang/bin/llvm-strip OBJDUMP=/root/clang/bin/llvm-objdump \
+                     OBJCOPY=/root/clang/bin/llvm-objcopy NM=/root/clang/bin/llvm-nm AR=/root/clang/bin/llvm-ar 2>&1|tee kernel.log \
       - name: Create Release
         id: create_release
         uses: actions/create-release@master
